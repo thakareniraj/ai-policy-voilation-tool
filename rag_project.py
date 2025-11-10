@@ -23,23 +23,21 @@ load_dotenv()
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
 db_path = "./policy_db"
-pdf_file = "workfromhome.pdf"
+'''stored in the same directory for 
+simplicity as of now '''
+pdf_file = "workfromhome.pdf" 
 
 if Path(db_path).exists():
     db = Chroma(persist_directory=db_path, embedding_function=embeddings)
-    print(f"Successfully  load database from {db_path}")
 else:
-    print("creating new db")
     
     loader = PyPDFLoader(pdf_file)
     documents = loader.load()
     
-    print("Splitting step")
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.split_documents(documents)
     
     db = Chroma.from_documents(chunks, embedding=embeddings, persist_directory=db_path)
-    print("created a saved vector db")
 
 retriever = db.as_retriever(search_kwargs={"k": 3})
 
@@ -56,15 +54,8 @@ query = "If I work remotely from another country, does it violate any company po
 
 result = qa_chain.invoke({"query": query})
 
-print("ANSWER:")
 print(result["result"])
-print()
 
-print("SOURCE DOCUMENTS USED FOR THIS ANSWER:")
 for i, doc in enumerate(result["source_documents"], 1):
     print(f"\n[Document {i}]")
-    content_preview = doc.page_content[:500]
-    print(content_preview)
-    if len(doc.page_content) > 500:
-        print("...")
-    print()
+
